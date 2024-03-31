@@ -1,56 +1,42 @@
-var _terrainWidth = 39;
-var _terrainHeight = 36;
-
 var xx = -1;
 var yy = -1;
-var roomtype = "";
-var roomindex = -1;
-var xroom = -1;
-var yroom = -1;
 
-var moral = scr_atr("Morale");
-var sanity = scr_atr("Sanity");
-var pain = scr_atr("Pain");
-var hunger = scr_atr("Hunger");
-var thirsty = scr_atr("Thirsty");
-
-do
+if (global.rescue > 3)
 {
-    xx = irandom(_terrainWidth);
-    yy = irandom(_terrainHeight);
-    roomtype = scr_globaltile_get("room_type", xx, yy);
-    roomindex = asset_get_index(roomtype);
-    scr_actionsLogUpdate("tested roomtype " + roomtype + ": " + string(xx) + " " + string(yy) + " at room index: " + string(roomindex));
+    global.rescue = 0;
+    xx = global.osbrook_x;
+    yy = global.osbrook_y;
 }
-until (roomindex >= 0 && roomtype != "r_sea" && roomtype != "r_AbbeyOfHolyRevelation");
-
-scr_actionsLogUpdate("new coordinates: " + string(xx) + " " + string(yy) + " at room index: " + string(roomindex));
+else
+{
+    global.rescue += 1;
+    var _terrainWidth = 39;
+    var _terrainHeight = 36;
+    
+    var roomtype = "";
+    var roomindex = -1;
+    
+    do
+    {
+        xx = irandom(_terrainWidth);
+        yy = irandom(_terrainHeight);
+        roomtype = scr_globaltile_get("room_type", xx, yy);
+        roomindex = asset_get_index(roomtype);
+    }
+    until (roomindex >= 0 && roomtype != "r_sea" && roomtype != "r_AbbeyOfHolyRevelation");
+}
 
 var _distance = scr_tile_distance_xy(global.playerGridX, global.playerGridY, xx, yy, 1);
 global.playerGridX = xx;
 global.playerGridY = yy;
 
-scr_smoothFastTravel(scr_globaltile_get_room(), ceil((_distance * 0.5)));
-
-do
+var _smoothChanger = scr_smoothRoomChange(scr_globaltile_get_room(), [4], (room_speed * 2))
+if ((_smoothChanger != -4))
 {
-    xroom = random(room_width);
-    yroom = random(room_height);
-    scr_actionsLogUpdate("tested place: " + string(xroom) + " " + string(yroom));
+    with (instance_create_depth(-50, -50, 0, o_sleepController))
+    {
+        smoothChanger = _smoothChanger
+        sleepType = 16
+        sleepHours = ceil((_distance * 0.5))
+    }
 }
-until (place_free(xroom, yroom));
-
-with(o_player)
-{
-    x = xroom;
-    y = yroom;
-    draw_x = xroom;
-    draw_y = yroom;
-}
-ds_map_replace(global.characterDataMap, "Morale", moral * 0.75);
-ds_map_replace(global.characterDataMap, "Sanity", sanity * 0.75);
-ds_map_replace(global.characterDataMap, "Pain", pain * 0.75 + 0.25 * 50);
-ds_map_replace(global.characterDataMap, "Hunger", hunger * 0.75 + 0.25 * 50);
-ds_map_replace(global.characterDataMap, "Thirsty", thirsty * 0.75 + 0.25 * 50);
-
-// scr_camera_set_target(o_player)
